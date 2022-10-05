@@ -1,8 +1,10 @@
+gpu_device_ids: [0]
 batch_size: 32
 workers: 0
 nepoch: 100
 model_name: vrcnet
-load_model: ./log/vrcnet_cd_debug_2021-06-18T16:36:20/best_cd_t_network.pth
+#load_model: ./log/vrcnet_cd_debug_2021-06-18T16:36:20/best_cd_t_network.pth
+load_model: null
 start_epoch: 0
 num_points: 2048
 work_dir: log/

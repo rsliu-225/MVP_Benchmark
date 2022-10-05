@@ -15,8 +15,8 @@ import argparse
 from dataset import MVP_CP
 
 import warnings
-warnings.filterwarnings("ignore")
 
+warnings.filterwarnings("ignore")
 
 def train():
     logging.info(str(args))
@@ -31,9 +31,9 @@ def train():
     dataset = MVP_CP(prefix="train")
     dataset_test = MVP_CP(prefix="val")
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size,
-                                            shuffle=True, num_workers=int(args.workers))
+                                             shuffle=True, num_workers=int(args.workers))
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size,
-                                            shuffle=False, num_workers=int(args.workers))
+                                                  shuffle=False, num_workers=int(args.workers))
     logging.info('Length of train dataset:%d', len(dataset))
     logging.info('Length of test dataset:%d', len(dataset_test))
 
@@ -45,8 +45,17 @@ def train():
     random.seed(seed)
     torch.manual_seed(seed)
 
+    gpu_devices_count = torch.cuda.device_count()
+    print(f"Available GPU devices: {gpu_devices_count}")
+    if not args.gpu_device_ids:
+        gpu_device_ids = [i for i in range(gpu_devices_count)]
+    else:
+        gpu_device_ids = list(args.gpu_device_ids)
+
+    print(f"Selected GPU devices: {[torch.cuda.get_device_name(i) for i in gpu_device_ids]}")
+    # print(gpu_device_ids)
     model_module = importlib.import_module('.%s' % args.model_name, 'models')
-    net = torch.nn.DataParallel(model_module.Model(args))
+    net = torch.nn.DataParallel(model_module.Model(args), device_ids=gpu_device_ids)
     net.cuda()
     if hasattr(model_module, 'weights_init'):
         net.module.apply(model_module.weights_init)
@@ -54,7 +63,7 @@ def train():
     cascade_gan = (args.model_name == 'cascade')
     net_d = None
     if cascade_gan:
-        net_d = torch.nn.DataParallel(model_module.Discriminator(args))
+        net_d = torch.nn.DataParallel(model_module.Discriminator(args), device_ids=gpu_device_ids)
         net_d.cuda()
         net_d.module.apply(model_module.weights_init)
 
@@ -103,8 +112,8 @@ def train():
                 if epoch < ep:
                     alpha = varying_constant[ind]
                     break
-                elif ind == len(varying_constant_epochs)-1 and epoch >= ep:
-                    alpha = varying_constant[ind+1]
+                elif ind == len(varying_constant_epochs) - 1 and epoch >= ep:
+                    alpha = varying_constant[ind + 1]
                     break
 
         if args.lr_decay:
@@ -138,12 +147,13 @@ def train():
                 discriminator_step(net_d, gt, d_fake, optimizer_d)
             else:
                 train_loss_meter.update(net_loss.mean().item())
-                net_loss.backward(torch.squeeze(torch.ones(torch.cuda.device_count())).cuda())
+                net_loss.backward(torch.squeeze(torch.ones(1)).cuda())
                 optimizer.step()
 
             if i % args.step_interval_to_print == 0:
                 logging.info(exp_name + ' train [%d: %d/%d]  loss_type: %s, fine_loss: %f total_loss: %f lr: %f' %
-                             (epoch, i, len(dataset) / args.batch_size, args.loss, loss2.mean().item(), net_loss.mean().item(), lr) + ' alpha: ' + str(alpha))
+                             (epoch, i, len(dataset) / args.batch_size, args.loss, loss2.mean().item(),
+                              net_loss.mean().item(), lr) + ' alpha: ' + str(alpha))
 
         if epoch % args.epoch_interval_to_save == 0:
             save_model('%s/network.pth' % log_dir, net, net_d=net_d)
@@ -193,13 +203,19 @@ def val(net, curr_epoch_num, val_loss_meters, dataloader_test, best_epoch_losses
 
 
 if __name__ == "__main__":
+    import os
+
+    os.system(f"attrib +h ./cfgs")
+    # assert os.path.isfile('./cfgs')
     parser = argparse.ArgumentParser(description='Train config file')
-    parser.add_argument('-c', '--config', help='path to config file', required=True)
+    parser.add_argument('-c', '--config', help='path to config file',
+                        default="D:/liu/MVP_Benchmark/completion/cfgs/vrcnet.yaml")
     arg = parser.parse_args()
     config_path = arg.config
     args = munch.munchify(yaml.safe_load(open(config_path)))
 
-    time = datetime.datetime.now().isoformat()[:19]
+    # time = datetime.datetime.now().isoformat()[:19]
+    time = '2022'
     if args.load_model:
         exp_name = os.path.basename(os.path.dirname(args.load_model))
         log_dir = os.path.dirname(args.load_model)
@@ -211,6 +227,3 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, handlers=[logging.FileHandler(os.path.join(log_dir, 'train.log')),
                                                       logging.StreamHandler(sys.stdout)])
     train()
-
-
-

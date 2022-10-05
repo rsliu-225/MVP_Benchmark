@@ -21,6 +21,7 @@ warnings.filterwarnings("ignore")
 
 
 def test():
+    logging.info(str(args))
     dataset_test = MVP_CP(prefix="test")
     dataloader_test = torch.utils.data.DataLoader(dataset_test, batch_size=args.batch_size,
                                                   shuffle=False, num_workers=int(args.workers))
@@ -66,10 +67,13 @@ def test():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Test config file')
-    parser.add_argument('-c', '--config', help='path to config file', required=True)
+    # parser.add_argument('-c', '--config', help='path to config file', required=True)
+    parser.add_argument('-c', '--config', help='path to config file',
+                        default="D:/liu/MVP_Benchmark/completion/cfgs/pcn.yaml")
     arg = parser.parse_args()
     config_path = arg.config
     args = munch.munchify(yaml.safe_load(open(config_path)))
+    print(args)
 
     if not args.load_model:
         raise ValueError('Model path must be provided to load model!')

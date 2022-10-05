@@ -1,11 +1,13 @@
+gpu_device_ids: [0]
 batch_size: 32
 workers: 0
 nepoch: 100
 model_name: pcn
-load_model: null
+#load_model: null
+load_model: D:/liu/MVP_Benchmark/completion/log/pcn_cd_debug_2022/best_cd_p_network.pth
 start_epoch: 0
 num_points: 2048
-work_dir: log/
+work_dir: D:/liu/MVP_Benchmark/completion/log/
 flag: debug
 loss: cd
 manual_seed: null

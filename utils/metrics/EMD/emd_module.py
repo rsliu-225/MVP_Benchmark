@@ -31,8 +31,8 @@ import os
 from torch.utils.cpp_extension import load
 emd = load(name="emd",
         sources=[
-            "/".join(os.path.abspath(__file__).split('/')[:-1] + ["emd.cpp"]),
-            "/".join(os.path.abspath(__file__).split('/')[:-1] + ["emd_cuda.cu"]),
+            "/".join(os.path.abspath(__file__).split('\\')[:-1] + ["emd.cpp"]),
+            "/".join(os.path.abspath(__file__).split('\\')[:-1] + ["emd_cuda.cu"]),
             ])
 print("Loaded JIT 3D CUDA emd")
 

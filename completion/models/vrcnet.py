@@ -99,7 +99,7 @@ class Linear_ResBlock(nn.Module):
         self.conv2 = nn.Linear(input_size, output_size)
         self.conv_res = nn.Linear(input_size, output_size)
 
-        self.af = nn.ReLU(inplace=True)
+        self.af = nn.ReLU(inplace=False)
 
     def forward(self, feature):
         return self.conv2(self.af(self.conv1(self.af(feature)))) + self.conv_res(feature)
