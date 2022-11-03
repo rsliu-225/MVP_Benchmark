@@ -55,17 +55,15 @@ class PCN_decoder(nn.Module):
         grid_feat = grid.unsqueeze(0).repeat(batch_size, 1, self.num_coarse).contiguous().cuda()
 
         point_feat = (
-            (coarse.transpose(1, 2).contiguous()).unsqueeze(2).repeat(1, 1, self.scale, 1).view(-1, self.num_fine,
-                                                                                                3)).transpose(1,
-                                                                                                              2).contiguous()
+            (coarse.transpose(1, 2).contiguous()).unsqueeze(2).
+                repeat(1, 1, self.scale, 1).view(-1, self.num_fine, 3)).transpose(1, 2).contiguous()
 
         global_feat = x.unsqueeze(2).repeat(1, 1, self.num_fine)
 
         feat = torch.cat((grid_feat, point_feat, global_feat), 1)
 
-        center = ((coarse.transpose(1, 2).contiguous()).unsqueeze(2).repeat(1, 1, self.scale, 1).view(-1, self.num_fine,
-                                                                                                      3)).transpose(1,
-                                                                                                                    2).contiguous()
+        center = ((coarse.transpose(1, 2).contiguous()).unsqueeze(2).
+                    repeat(1, 1, self.scale, 1).view(-1, self.num_fine, 3)).transpose(1, 2).contiguous()
 
         fine = self.conv3(F.relu(self.conv2(F.relu(self.conv1(feat))))) + center
         return coarse, fine

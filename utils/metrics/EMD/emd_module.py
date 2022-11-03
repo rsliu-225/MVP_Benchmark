@@ -46,7 +46,7 @@ class emdFunction(Function):
 
         assert(n == m)
         assert(xyz1.size()[0] == xyz2.size()[0])
-        #assert(n % 1024 == 0)
+        # assert(n % 1024 == 0)
         assert(batchsize <= 512)
 
         xyz1 = xyz1.contiguous().float().cuda()
@@ -88,8 +88,8 @@ class emdModule(nn.Module):
         return emdFunction.apply(input1, input2, eps, iters)
 
 def test_emd():
-    x1 = torch.rand(20, 8192, 3).cuda()
-    x2 = torch.rand(20, 8192, 3).cuda()
+    x1 = torch.rand(20, 2048, 3).cuda()
+    x2 = torch.rand(20, 2048, 3).cuda()
     emd = emdModule()
     start_time = time.perf_counter()
     dis, assigment = emd(x1, x2, 0.05, 3000)

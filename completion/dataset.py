@@ -4,15 +4,20 @@ import torch.utils.data as data
 import h5py
 import os
 
+FO = 'data_2048_prim'
+
 
 class MVP_CP(data.Dataset):
     def __init__(self, prefix="train"):
-        if prefix=="train":
-            self.file_path = './data/MVP_Train_CP.h5'
-        elif prefix=="val":
-            self.file_path = './data/MVP_Test_CP.h5'
-        elif prefix=="test":
-            self.file_path = './data/MVP_Test_CP.h5'
+        if prefix == "train":
+            self.file_path = f'./{FO}/train.h5'
+            # self.file_path = './data/MVP_Train_CP.h5'
+        elif prefix == "val":
+            self.file_path = f'./{FO}/val.h5'
+            # self.file_path = './data/MVP_Test_CP.h5'
+        elif prefix == "test":
+            self.file_path = f'./{FO}/test.h5'
+            # self.file_path = './data/MVP_Test_CP.h5'
             # self.file_path = './data/MVP_ExtraTest_Shuffled_CP.h5'
         else:
             raise ValueError("ValueError prefix should be [train/val/test] ")
@@ -29,7 +34,6 @@ class MVP_CP(data.Dataset):
             self.labels = np.array(input_file['labels'][()])
             print(self.gt_data.shape, self.labels.shape)
 
-
         input_file.close()
         self.len = self.input_data.shape[0]
 
@@ -40,7 +44,7 @@ class MVP_CP(data.Dataset):
         partial = torch.from_numpy((self.input_data[index]))
 
         if self.prefix is not "test":
-            complete = torch.from_numpy((self.gt_data[index // 26]))
+            complete = torch.from_numpy((self.gt_data[index]))
             label = (self.labels[index])
             return label, partial, complete
         else:

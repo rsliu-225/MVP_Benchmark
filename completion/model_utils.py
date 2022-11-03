@@ -5,8 +5,6 @@ import sys
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-
 # proj_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # sys.path.append(os.path.join(proj_dir, "utils/Pointnet2.PyTorch/pointnet2"))
 # import pointnet2_utils as pn2
@@ -19,6 +17,7 @@ import torch.nn.functional as F
 sys.path.append("../utils")
 from metrics import cd, fscore, emd
 from mm3d_pn2 import furthest_point_sample, gather_points, grouping_operation, ball_query, three_nn
+
 
 # from ..utils import cd, fscore, emd, furthest_point_sample, gather_points, grouping_operation, ball_query, three_nn
 
@@ -91,16 +90,15 @@ def edge_preserve_sampling(feature_input, point_input, num_samples, k=10):
     num_points = feature_input.size()[2]
 
     p_idx = furthest_point_sample(point_input, num_samples)
-    point_output = gather_points(point_input.transpose(1, 2).contiguous(), p_idx).transpose(1,
-                                                                                                   2).contiguous()
+    point_output = gather_points(point_input.transpose(1, 2).contiguous(), p_idx).transpose(1, 2).contiguous()
 
     pk = int(min(k, num_points))
     _, pn_idx = knn_point(pk, point_input, point_output)
     pn_idx = pn_idx.detach().int()
     neighbor_feature = gather_points(feature_input, pn_idx.view(batch_size, num_samples * pk)).view(batch_size,
-                                                                                                           feature_size,
-                                                                                                           num_samples,
-                                                                                                           pk)
+                                                                                                    feature_size,
+                                                                                                    num_samples,
+                                                                                                    pk)
     neighbor_feature, _ = torch.max(neighbor_feature, 3)
 
     center_feature = grouping_operation(feature_input, p_idx.unsqueeze(2)).view(batch_size, -1, num_samples)
@@ -203,28 +201,28 @@ def get_uniform_loss(pcd, percentages=[0.004, 0.006, 0.008, 0.010, 0.012], radiu
     npoint = int(N * 0.05)
     loss = 0
     for p in percentages:
-        nsample = int(N*p)
-        r = math.sqrt(p*radius)
-        disk_area = math.pi * (radius ** 2) * p/nsample
+        nsample = int(N * p)
+        r = math.sqrt(p * radius)
+        disk_area = math.pi * (radius ** 2) * p / nsample
         new_xyz = gather_points(pcd.transpose(1, 2).contiguous(),
-                                       furthest_point_sample(pcd, npoint)).transpose(1, 2).contiguous()
+                                furthest_point_sample(pcd, npoint)).transpose(1, 2).contiguous()
         idx = ball_query(0, r, nsample, pcd, new_xyz)
         expect_len = math.sqrt(disk_area)
 
-        grouped_pcd = grouping_operation(pcd.transpose(1,2).contiguous(), idx)
+        grouped_pcd = grouping_operation(pcd.transpose(1, 2).contiguous(), idx)
         grouped_pcd = grouped_pcd.permute(0, 2, 3, 1).contiguous().view(-1, nsample, 3)
 
         var, _ = knn_point(2, grouped_pcd, grouped_pcd)
         uniform_dis = -var[:, :, 1:]
 
-        uniform_dis = torch.sqrt(torch.abs(uniform_dis+1e-8))
+        uniform_dis = torch.sqrt(torch.abs(uniform_dis + 1e-8))
         uniform_dis = torch.mean(uniform_dis, dim=-1)
-        uniform_dis = ((uniform_dis - expect_len)**2 / (expect_len + 1e-8))
+        uniform_dis = ((uniform_dis - expect_len) ** 2 / (expect_len + 1e-8))
 
         mean = torch.mean(uniform_dis)
-        mean = mean*math.pow(p*100,2)
+        mean = mean * math.pow(p * 100, 2)
         loss += mean
-    return loss/len(percentages)
+    return loss / len(percentages)
 
 
 def index_points(points, idx):

@@ -17,6 +17,7 @@ from train_utils import *
 from dataset import MVP_CP
 
 import warnings
+
 warnings.filterwarnings("ignore")
 
 
@@ -40,12 +41,9 @@ def test():
     with torch.no_grad():
         results_list = []
         for i, data in enumerate(dataloader_test):
-            
             inputs_cpu = data
-
             inputs = inputs_cpu.float().cuda()
             inputs = inputs.transpose(2, 1).contiguous()
-
             result_dict = net(inputs, prefix="test")
             results_list.append(result_dict['result'].cpu().numpy())
 
@@ -57,10 +55,10 @@ def test():
 
         with h5py.File(log_dir + '/results.h5', 'w') as f:
             f.create_dataset('results', data=all_results)
-        
+
         cur_dir = os.getcwd()
         cmd = "cd %s; zip -r submission.zip results.h5 ; cd %s" % (log_dir, cur_dir)
-        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        process = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         _, _ = process.communicate()
         print("Submission file has been saved to %s/submission.zip" % (log_dir))
 
@@ -73,7 +71,6 @@ if __name__ == "__main__":
     arg = parser.parse_args()
     config_path = arg.config
     args = munch.munchify(yaml.safe_load(open(config_path)))
-    print(args)
 
     if not args.load_model:
         raise ValueError('Model path must be provided to load model!')

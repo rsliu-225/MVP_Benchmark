@@ -16,7 +16,10 @@ from dataset import MVP_CP
 
 import warnings
 
+import torch.utils.cpp_extension
+
 warnings.filterwarnings("ignore")
+
 
 def train():
     logging.info(str(args))
@@ -181,7 +184,6 @@ def val(net, curr_epoch_num, val_loss_meters, dataloader_test, best_epoch_losses
             result_dict = net(inputs, gt, prefix="val")
             for k, v in val_loss_meters.items():
                 v.update(result_dict[k].mean().item(), curr_batch_size)
-
         fmt = 'best_%s: %f [epoch %d]; '
         best_log = ''
         for loss_type, (curr_best_epoch, curr_best_loss) in best_epoch_losses.items():
@@ -209,13 +211,14 @@ if __name__ == "__main__":
     # assert os.path.isfile('./cfgs')
     parser = argparse.ArgumentParser(description='Train config file')
     parser.add_argument('-c', '--config', help='path to config file',
-                        default="D:/liu/MVP_Benchmark/completion/cfgs/vrcnet.yaml")
+                        default="D:/liu/MVP_Benchmark/completion/cfgs/pcn.yaml")
     arg = parser.parse_args()
     config_path = arg.config
     args = munch.munchify(yaml.safe_load(open(config_path)))
 
-    # time = datetime.datetime.now().isoformat()[:19]
-    time = '2022'
+    time = ':'.join(datetime.datetime.now().isoformat()[:19].split('-'))
+    time = ''.join(time.split(':'))
+    # time = '2022'
     if args.load_model:
         exp_name = os.path.basename(os.path.dirname(args.load_model))
         log_dir = os.path.dirname(args.load_model)
